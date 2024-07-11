@@ -1,3 +1,4 @@
+
 const fs = require('fs');
 const express = require('express');
 const app = express();
@@ -7,7 +8,6 @@ const userRouter = require('./routes/userRoutes');
 app.use(express.json());
 // Middleware to log requests
 const middleware = (req, res, next) => {
-    console.log("Hello from the Middleware 🙋‍♀️");
     next();
 };
  // MIDDLE WARES
@@ -16,7 +16,6 @@ const middleware = (req, res, next) => {
  }
  app.use(middleware);
  app.use((req, res, next)=>{
-    console.log("Middle ware called");
     req.requestTime = new Date().toISOString();
     next();
  })
@@ -38,5 +37,3 @@ module.exports = app;
 
 
 // STARTING THE SERVER
-
-
