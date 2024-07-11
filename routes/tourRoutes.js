@@ -1,8 +1,12 @@
 const express = require('express');
 const tourRouter = express.Router();
-const {getAllRoutes, createTour, getTour, updateTour,deleteTour, checkId, validPost} = require('../controller/tour.controller');
+const {getAllRoutes, createTour, getTour, updateTour,deleteTour, aliasTours, validPost} = require('../controller/tour.controller');
 const fs = require('fs');
 //tourRouter.param('xyz',checkId )
+tourRouter
+    .route('/top-5-cheap')
+    .get(aliasTours ,getAllRoutes)
+    
 tourRouter
     .route('/')
     .get(getAllRoutes)
@@ -13,5 +17,7 @@ tourRouter
     .get(getTour)
     .patch(updateTour)
     .delete(deleteTour);
+
+
 
 module.exports= tourRouter;

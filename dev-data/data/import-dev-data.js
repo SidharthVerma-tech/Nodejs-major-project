@@ -14,7 +14,7 @@ mongoose.connect(DB, {
 console.log(process.argv);
 const tours = JSON.parse(fs.readFileSync('./dev-data/data/tours-simple.json', 'utf-8'));
 // IMPORT DATA INTO DATABASE
-
+console.log(tours)
 const importData = async () => {
     try {
         await Tour.create(tours);

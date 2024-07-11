@@ -25,6 +25,12 @@ router.param('xyz', (req,res,next,val)=>{
 //     }
 //     next();
 // };
+exports.aliasTours = (req,res,next) => {
+    req.query.limit = '5',
+    req.query.sort = 'price',
+    req.query.fields = 'name,price,ratingsAvergage,difficulty,duration'
+    next()
+}
 exports.getTour = async (req, res) => {
     // console.log(req.params.xyz);
     // const id = req.params.xyz * 1;
@@ -62,21 +68,63 @@ exports.updateTour = async (req, res) => {
         })
     }
 };
+
 exports.getAllRoutes = async (req, res) => {
     try {
-        const allTours = await Tour.find();
+        // Step 1: Extract and log query parameters
+        const queryObj = { ...req.query };
+
+        // Step 2: Remove excluded fields and log the resulting query object
+        const excludedFields = ['sort', 'page', 'limit', 'fields'];
+        excludedFields.forEach(el => delete queryObj[el]);
+
+        // Step 3: Advanced filtering
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, match => `$${match}`);
+        let query = Tour.find(JSON.parse(queryStr));
+
+        // Step 4: Sorting
+        if (req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        } else {
+            query = query.sort('-createdAt');
+        }
+
+        // Step 5: Field limiting
+        if (req.query.fields) {
+            const fields = req.query.fields.split(',').join(' ');
+            query = query.select(fields);
+        } else {
+            query = query.select('-__v');
+        }
+        // PAGINATION
+        const page = req.query.page*1
+        const limit = req.query.limit*1
+        const skip = (page-1)*limit;
+        query = query.skip(skip).limit(limit)
+        if(req.query.page){
+            const numTours = await Tour.countDocuments()
+            if(skip >= numTours) throw new Error('This page does not exist')
+        }
+        // Step 6: Execute query and send response
+        const allTours = await query;
         res.status(200).json({
-            success : "true",
-            data : {
-                data : allTours,
-            }
-        })
+            success: true,
+            results : allTours.length,
+            data: {
+                tours: allTours,
+            },
+        });
     } catch (error) {
         res.status(404).json({
-            error : "Error in fetching tours"
-        })
+            success: false,
+            message: error
+        });
     }
 };
+
+
 
 exports.createTour = async (req, res) => {
     // const newTour = new Tour({})
