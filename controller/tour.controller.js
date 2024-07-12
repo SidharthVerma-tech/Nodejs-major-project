@@ -1,5 +1,6 @@
 const express = require('express')
-const Tour = require('../models/tour.model.js')
+const Tour = require('../models/tour.model.js');
+const AppError = require('../utils/appError.js');
 //const fs = require('fs');
 //const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`));
 const router = express.Router();
@@ -35,6 +36,7 @@ exports.getTour = async (req, res) => {
     // console.log(req.params.xyz);
     // const id = req.params.xyz * 1;
     //const tour = tours.filter(el => el.id === id);
+    
     try {
         const tour = await Tour.findById(req.params.xyz)
         // Tour.findOne({__id : req.params.id})
@@ -157,6 +159,82 @@ exports.deleteTour = async (req,res) => {
     } catch (error) {
         res.status(404).json({
             success: "Failure",
+            message : error
+        })
+    }
+}
+
+exports.getTourStats = async (req, res) => {
+    try {
+        const stats = await Tour.aggregate([
+            {
+                $match: { rating: { $gte: 4.5 } }
+            },
+            {
+                $group: {
+                    _id : null,
+                    numTours : {$sum : 1},
+                    avgPrice: { $avg: '$price' },
+                    minPrice: { $min: '$price' },
+                    maxPrice: { $max: '$price' }
+                }
+            },
+              
+        ]);
+
+        res.status(200).json({
+            success: 'Success',
+            data: {
+                stats
+            }
+        });
+    } catch (error) {
+        res.status(404).json({
+            success: 'Failure',
+            message: error.message
+        });
+    }
+};
+exports.getMonthlyPlan = async(req, res) => {
+    try {
+        const year = req.params.year*1
+        const monthlyTour = await Tour.aggregate([
+            { $unwind : '$startDates'},
+            {
+                $match : {
+                    startDates : {
+                        $gte : new Date(`${year}-01-01`),
+                        $lte : new Date(`${year}-12-31`)
+                    }
+                }
+            },
+            {
+                $group : {
+                    _id : {$month : '$startDates'},
+                    numTourStarts : {$sum : 1},
+                    tours : {$push : '$name'}
+                }
+            },
+            {
+                $addFields : {month : '$_id'}
+            },
+            {
+                $project : {
+                    _id : 0,
+                }
+            },
+            {
+                $sort : {
+
+                }
+            }
+        ])
+        res.status(200).json({
+            monthlyTour
+        })
+    } catch (error) {
+        res.status(404).json({
+            success : 'Failure Mh bad',
             message : error
         })
     }
