@@ -1,12 +1,11 @@
-
 const fs = require('fs');
 const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const tourRouter = require('./routes/tourRoutes');
-const userRouter = require('./routes/userRoutes');
 const AppError = require('./utils/appError')
-const globalErrorHandler = require('./controller/error.controller')
+const globalErrorHandler = require('./controller/error.controller');
+const userRouter = require('./routes/user.routes');
 app.use(express.json());
 // Middleware to log requests
 const middleware = (req, res, next) => {
@@ -19,6 +18,7 @@ const middleware = (req, res, next) => {
  app.use(middleware);
  app.use((req, res, next)=>{
     req.requestTime = new Date().toISOString();
+    console.log(req.headers)
     next();
  })
 
