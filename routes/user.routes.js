@@ -1,11 +1,14 @@
 const express = require('express')
 const { getUsers } = require('../controller/user.controller')
-const { signup, login} = require('../controller/auth.controller')
+const { signup, login, forgotPassword} = require('../controller/auth.controller')
 const userRouter = express.Router()
 userRouter
     .route('/')
     .get(getUsers)
-    
+
+userRouter
+    .route('/forgotPassword')
+    .post(forgotPassword)
 userRouter
     .route('/signup')
     .post(signup) 
